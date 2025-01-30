@@ -1,0 +1,46 @@
+.main {
+    padding: 2rem;
+    max-width: 800px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.main h1 {
+    color: #002f34;
+    margin-bottom: 1rem;
+}
+
+.main p {
+    color: #666;
+    font-size: 1.1rem;
+    margin-bottom: 2rem;
+}
+
+.features {
+    background: #fff;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.features h2 {
+    color: #002f34;
+    margin-bottom: 1rem;
+}
+
+.features ul {
+    list-style: none;
+    padding: 0;
+}
+
+.features li {
+    color: #666;
+    padding: 0.5rem 0;
+    font-size: 1.1rem;
+}
+
+@media (max-width: 768px) {
+    .main {
+        padding: 1rem;
+    }
+}

@@ -1,0 +1,67 @@
+/* Import Bootstrap CSS */
+@import '~bootstrap/dist/css/bootstrap.min.css';
+
+.App {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.container {
+  flex: 1;
+  padding: 20px;
+}
+
+/* General styles */
+body {
+  background-color: #f8f9fa;
+}
+
+/* Card styles */
+.card {
+  transition: transform 0.2s;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+/* Form styles */
+.form-control:focus {
+  border-color: #28a745;
+  box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+}
+
+/* Button styles */
+.btn-success {
+  background-color: #28a745;
+  border-color: #28a745;
+}
+
+.btn-success:hover {
+  background-color: #218838;
+  border-color: #1e7e34;
+}
+
+/* Modal styles */
+.modal-content {
+  border-radius: 8px;
+}
+
+.modal-header {
+  border-bottom: 1px solid #dee2e6;
+  background-color: #f8f9fa;
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+}
+
+/* Image preview styles */
+.img-preview {
+  max-width: 100%;
+  max-height: 200px;
+  object-fit: contain;
+  margin-top: 10px;
+  border-radius: 4px;
+}

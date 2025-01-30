@@ -1,34 +1,63 @@
 import React from 'react';
-import png1 from '../img/ankur.jpeg';
-import png2 from '../img/ankit.jpeg';
-import ReactDOM from 'react-dom';
-import '../style/style1.css';
+import { makeStyles } from '@material-ui/core/styles';
+import { Paper, Typography, Container, Grid } from '@material-ui/core';
+
+const useStyles = makeStyles((theme) => ({
+  root: {
+    padding: theme.spacing(4),
+    marginTop: theme.spacing(4),
+  },
+  paper: {
+    padding: theme.spacing(3),
+    textAlign: 'center',
+  },
+  title: {
+    marginBottom: theme.spacing(3),
+    color: '#002f34'
+  },
+  feature: {
+    marginBottom: theme.spacing(2),
+    color: '#666'
+  }
+}));
+
 const About = () => {
-    return (
-        <div class="main">       
-         <div class="card" >
+  const classes = useStyles();
 
-        <img src={png1} alt="Card image cap" />
-
-        <div class="card-body new">
-            <p class="card-text color"><b>Ankur A Zalavadiya</b></p>
-            <a href="https://www.facebook.com/ankur.zalavadiya.3"><i class="fa fa-facebook-square icon color" aria-hidden="true"></i> </a>
-            <a href="https://instagram.com/mr__perfect__1903?igshid=10ocwyv85t6ju"><i class="fa fa-instagram icon color ml-3 mr-3" aria-hidden="true"></i> </a>
-            <a href="https://twitter.com/AnkurZalavadiy3?s=08"><i class="fa fa-twitter icon color" aria-hidden="true"></i> </a>
-        </div> 
-        </div>
-        <div class="card usd" >
-       
-        <img src={png2} alt="Card image cap" />
-        <div class="card-body new">
-            <p class="card-text color strong"><b>Ankit J Chotaliya</b></p>
-             <a href="https://www.facebook.com/ankit.chotaliya.3"><i class="fa fa-facebook-square icon color" aria-hidden="true"></i></a>
-             <a href="https://instagram.com/mr__perfect__3110?igshid=10ocwyv85t6ju"><i class="fa fa-instagram icon color ml-3 mr-3" aria-hidden="true"></i></a>
-             <a href="https://twitter.com/Ankitchotaliya?s=08"><i class="fa fa-twitter icon color" aria-hidden="true"></i></a>
-        </div> 
-        </div>
+  return (
+    <Container maxWidth="md">
+      <Paper className={classes.paper} elevation={3}>
+        <Typography variant="h3" component="h1" className={classes.title}>
+          Welcome to OLX Clone
+        </Typography>
+        <Typography variant="h6" className={classes.feature}>
+          A platform to buy and sell items locally
+        </Typography>
         
-        </div>
-           );
-}
+        <Grid container spacing={3}>
+          <Grid item xs={12}>
+            <Typography variant="h4" className={classes.title}>
+              Features
+            </Typography>
+          </Grid>
+          {[
+            'Browse items for sale',
+            'Post your items',
+            'Contact sellers',
+            'Secure transactions'
+          ].map((feature, index) => (
+            <Grid item xs={12} sm={6} key={index}>
+              <Paper className={classes.paper} elevation={1}>
+                <Typography variant="h6" className={classes.feature}>
+                  {feature}
+                </Typography>
+              </Paper>
+            </Grid>
+          ))}
+        </Grid>
+      </Paper>
+    </Container>
+  );
+};
+
 export default About;
