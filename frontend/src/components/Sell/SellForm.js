@@ -1,246 +1,283 @@
 import React, { useState } from 'react';
-import { useHistory } from 'react-router-dom';
-import { createAd } from '../../services/api';
-import '../../../node_modules/bootstrap/dist/css/bootstrap.min.css';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import {
+  Container,
+  Paper,
+  TextField,
+  Button,
+  Typography,
+  Box,
+  Alert,
+  MenuItem,
+  CircularProgress,
+  IconButton,
+} from '@mui/material';
+import PhotoCamera from '@mui/icons-material/PhotoCamera';
+import { API_BASE_URL } from '../../config/api';
 
 const categories = [
   'Cars',
   'Motorcycles',
   'Mobile Phones',
-  'Houses & Apartments',
+  'For Sale: Houses & Apartments',
   'Scooters',
-  'Commercial Vehicles',
+  'Commercial & Other Vehicles',
+  'For Rent: Houses & Apartments',
+];
+
+const locations = [
+  'Delhi',
+  'Mumbai',
+  'Bangalore',
+  'Hyderabad',
+  'Chennai',
+  'Kolkata',
+  'Pune',
 ];
 
 const SellForm = () => {
-  const history = useHistory();
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     price: '',
     category: '',
-    image: '',
     location: '',
-    seller: '',
     contact: '',
   });
+  const [image, setImage] = useState(null);
   const [imagePreview, setImagePreview] = useState('');
-  const [message, setMessage] = useState({ text: '', type: '' });
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
+    setFormData(prev => ({
       ...prev,
-      [name]: value,
+      [name]: value
     }));
+    setError('');
   };
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      if (file.size > 5000000) { // 5MB limit
-        setMessage({ text: 'Image size should be less than 5MB', type: 'danger' });
+      if (file.size > 5 * 1024 * 1024) { // 5MB limit
+        setError('Image size should be less than 5MB');
         return;
       }
 
+      setImage(file);
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result);
-        setFormData((prev) => ({
-          ...prev,
-          image: reader.result,
-        }));
-      };
-      reader.onerror = () => {
-        setMessage({ text: 'Error reading image file', type: 'danger' });
       };
       reader.readAsDataURL(file);
     }
   };
 
-  const validateForm = () => {
-    const requiredFields = ['title', 'price', 'category', 'location', 'seller', 'contact'];
-    const missingFields = requiredFields.filter(field => !formData[field]);
-    
-    if (missingFields.length > 0) {
-      setMessage({ 
-        text: `Please fill in the following fields: ${missingFields.join(', ')}`, 
-        type: 'danger' 
-      });
-      return false;
-    }
-
-    if (!formData.image) {
-      setMessage({ text: 'Please upload an image', type: 'danger' });
-      return false;
-    }
-
-    return true;
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!validateForm()) {
+    // Validate form
+    if (!formData.title.trim()) {
+      setError('Title is required');
+      return;
+    }
+    if (!formData.description.trim()) {
+      setError('Description is required');
+      return;
+    }
+    if (!formData.price || isNaN(formData.price)) {
+      setError('Please enter a valid price');
+      return;
+    }
+    if (!formData.category) {
+      setError('Please select a category');
+      return;
+    }
+    if (!formData.location) {
+      setError('Please select a location');
+      return;
+    }
+    if (!formData.contact || !/^[0-9]{10}$/.test(formData.contact)) {
+      setError('Please enter a valid 10-digit contact number');
+      return;
+    }
+    if (!image) {
+      setError('Please upload an image');
       return;
     }
 
-    setIsSubmitting(true);
-    setMessage({ text: 'Submitting...', type: 'info' });
-
     try {
-      console.log('Submitting form data:', { ...formData, image: formData.image.substring(0, 50) + '...' });
-      
-      const response = await createAd({
-        ...formData,
-        price: Number(formData.price)
+      setLoading(true);
+      const formDataToSend = new FormData();
+      Object.keys(formData).forEach(key => {
+        formDataToSend.append(key, formData[key]);
+      });
+      formDataToSend.append('image', image);
+
+      const token = localStorage.getItem('token');
+      const response = await axios.post(`${API_BASE_URL}/ads`, formDataToSend, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
+        }
       });
 
-      console.log('Server response:', response);
-      
-      setMessage({ text: 'Ad posted successfully!', type: 'success' });
-      setTimeout(() => {
-        history.push('/products');
-      }, 2000);
-    } catch (error) {
-      console.error('Error details:', error);
-      setMessage({ 
-        text: error.response?.data?.message || 'Error posting ad. Please try again.', 
-        type: 'danger' 
-      });
+      navigate(`/product/${response.data._id}`);
+    } catch (err) {
+      console.error('Error creating ad:', err);
+      setError(err.response?.data?.error || 'Error creating ad. Please try again.');
     } finally {
-      setIsSubmitting(false);
+      setLoading(false);
     }
   };
 
   return (
-    <div className="container mt-4">
-      <div className="card">
-        <div className="card-body">
-          <h2 className="card-title mb-4">Post Your Ad</h2>
-          {message.text && (
-            <div className={`alert alert-${message.type}`} role="alert">
-              {message.text}
-            </div>
+    <Container maxWidth="md">
+      <Box sx={{ mt: 4, mb: 4 }}>
+        <Paper elevation={3} sx={{ p: 4 }}>
+          <Typography variant="h4" component="h1" align="center" gutterBottom>
+            Post Your Ad
+          </Typography>
+
+          {error && (
+            <Alert severity="error" sx={{ mb: 3 }}>
+              {error}
+            </Alert>
           )}
+
           <form onSubmit={handleSubmit}>
-            <div className="mb-3">
-              <label className="form-label">Title*</label>
-              <input
-                type="text"
-                className="form-control"
-                name="title"
-                value={formData.title}
-                onChange={handleChange}
-                required
-              />
-            </div>
-            <div className="mb-3">
-              <label className="form-label">Description</label>
-              <textarea
-                className="form-control"
-                name="description"
-                value={formData.description}
-                onChange={handleChange}
-                rows="4"
-              />
-            </div>
-            <div className="row mb-3">
-              <div className="col-md-6">
-                <label className="form-label">Price*</label>
-                <input
-                  type="number"
-                  className="form-control"
-                  name="price"
-                  value={formData.price}
-                  onChange={handleChange}
-                  required
-                  min="0"
-                />
-              </div>
-              <div className="col-md-6">
-                <label className="form-label">Category*</label>
-                <select
-                  className="form-select"
-                  name="category"
-                  value={formData.category}
-                  onChange={handleChange}
-                  required
-                >
-                  <option value="">Select a category</option>
-                  {categories.map((category) => (
-                    <option key={category} value={category}>
-                      {category}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-            <div className="row mb-3">
-              <div className="col-md-6">
-                <label className="form-label">Location*</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  name="location"
-                  value={formData.location}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-              <div className="col-md-6">
-                <label className="form-label">Contact Number*</label>
-                <input
-                  type="tel"
-                  className="form-control"
-                  name="contact"
-                  value={formData.contact}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-            </div>
-            <div className="mb-3">
-              <label className="form-label">Image* (Max 5MB)</label>
-              <input
-                type="file"
-                className="form-control"
-                accept="image/*"
-                onChange={handleImageChange}
-                required={!formData.image}
-              />
-              {imagePreview && (
-                <img
-                  src={imagePreview}
-                  alt="Preview"
-                  className="mt-2"
-                  style={{ maxWidth: '100%', maxHeight: '200px', objectFit: 'contain' }}
-                />
-              )}
-            </div>
-            <div className="mb-3">
-              <label className="form-label">Your Name*</label>
-              <input
-                type="text"
-                className="form-control"
-                name="seller"
-                value={formData.seller}
-                onChange={handleChange}
-                required
-              />
-            </div>
-            <button 
-              type="submit" 
-              className="btn btn-primary"
-              disabled={isSubmitting}
+            <TextField
+              fullWidth
+              label="Title"
+              name="title"
+              value={formData.title}
+              onChange={handleChange}
+              margin="normal"
+              required
+              helperText="Enter a descriptive title for your ad"
+            />
+
+            <TextField
+              fullWidth
+              label="Description"
+              name="description"
+              value={formData.description}
+              onChange={handleChange}
+              margin="normal"
+              required
+              multiline
+              rows={4}
+              helperText="Provide detailed information about your item"
+            />
+
+            <TextField
+              fullWidth
+              label="Price"
+              name="price"
+              type="number"
+              value={formData.price}
+              onChange={handleChange}
+              margin="normal"
+              required
+              InputProps={{
+                startAdornment: '₹',
+              }}
+            />
+
+            <TextField
+              fullWidth
+              select
+              label="Category"
+              name="category"
+              value={formData.category}
+              onChange={handleChange}
+              margin="normal"
+              required
             >
-              {isSubmitting ? 'Posting...' : 'Post Ad'}
-            </button>
+              {categories.map((category) => (
+                <MenuItem key={category} value={category}>
+                  {category}
+                </MenuItem>
+              ))}
+            </TextField>
+
+            <TextField
+              fullWidth
+              select
+              label="Location"
+              name="location"
+              value={formData.location}
+              onChange={handleChange}
+              margin="normal"
+              required
+            >
+              {locations.map((location) => (
+                <MenuItem key={location} value={location}>
+                  {location}
+                </MenuItem>
+              ))}
+            </TextField>
+
+            <TextField
+              fullWidth
+              label="Contact Number"
+              name="contact"
+              value={formData.contact}
+              onChange={handleChange}
+              margin="normal"
+              required
+              helperText="Enter your 10-digit mobile number"
+            />
+
+            <Box sx={{ mt: 2, mb: 2 }}>
+              <input
+                accept="image/*"
+                style={{ display: 'none' }}
+                id="image-upload"
+                type="file"
+                onChange={handleImageChange}
+              />
+              <label htmlFor="image-upload">
+                <IconButton
+                  color="primary"
+                  aria-label="upload picture"
+                  component="span"
+                >
+                  <PhotoCamera />
+                </IconButton>
+                <Typography variant="body2" component="span" sx={{ ml: 1 }}>
+                  Upload Image
+                </Typography>
+              </label>
+              {imagePreview && (
+                <Box sx={{ mt: 2 }}>
+                  <img
+                    src={imagePreview}
+                    alt="Preview"
+                    style={{ maxWidth: '100%', maxHeight: '200px' }}
+                  />
+                </Box>
+              )}
+            </Box>
+
+            <Button
+              type="submit"
+              fullWidth
+              variant="contained"
+              size="large"
+              disabled={loading}
+              sx={{ mt: 3 }}
+            >
+              {loading ? <CircularProgress size={24} /> : 'Post Ad'}
+            </Button>
           </form>
-        </div>
-      </div>
-    </div>
+        </Paper>
+      </Box>
+    </Container>
   );
 };
 

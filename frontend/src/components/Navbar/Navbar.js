@@ -1,109 +1,246 @@
-import React from 'react';
-import { Link, useHistory } from 'react-router-dom';
-import './Navbar.css';
+import React, { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import {
+  AppBar,
+  Box,
+  Toolbar,
+  IconButton,
+  Typography,
+  Menu,
+  MenuItem,
+  Button,
+  Divider,
+  Container,
+  Avatar,
+} from '@mui/material';
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
+import AddIcon from '@mui/icons-material/Add';
+import Search from '../Search/Search';
 
 const categories = [
   'Cars',
   'Motorcycles',
   'Mobile Phones',
-  'Houses & Apartments',
+  'For Sale: Houses & Apartments',
   'Scooters',
-  'Commercial Vehicles',
+  'Commercial & Other Vehicles',
+  'For Rent: Houses & Apartments',
+  'Electronics & Appliances',
+  'Furniture',
+  'Fashion',
 ];
 
 const Navbar = () => {
-  const history = useHistory();
-  const user = JSON.parse(localStorage.getItem('user'));
+  const navigate = useNavigate();
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [categoryAnchorEl, setCategoryAnchorEl] = useState(null);
+  const isLoggedIn = !!localStorage.getItem('token');
+  const userEmail = localStorage.getItem('userEmail');
 
-  const handleCategoryClick = (category) => {
-    history.push(`/category/${encodeURIComponent(category)}`);
+  const handleMenu = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleCategoryMenu = (event) => {
+    setCategoryAnchorEl(event.currentTarget);
+  };
+
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleCategoryClose = () => {
+    setCategoryAnchorEl(null);
   };
 
   const handleLogout = () => {
     localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    history.push('/login');
+    localStorage.removeItem('userEmail');
+    handleClose();
+    navigate('/');
+    window.location.reload();
+  };
+
+  const handleCategorySelect = (category) => {
+    handleCategoryClose();
+    navigate(`/category/${encodeURIComponent(category)}`);
   };
 
   return (
-    <nav className="navbar navbar-expand-lg navbar-dark bg-dark">
-      <div className="container">
-        <Link className="navbar-brand" to="/">
-          OLX Clone
-        </Link>
-        
-        <button
-          className="navbar-toggler"
-          type="button"
-          data-bs-toggle="collapse"
-          data-bs-target="#navbarNav"
-          aria-controls="navbarNav"
-          aria-expanded="false"
-          aria-label="Toggle navigation"
-        >
-          <span className="navbar-toggler-icon"></span>
-        </button>
-        
-        <div className="collapse navbar-collapse" id="navbarNav">
-          <ul className="navbar-nav me-auto mb-2 mb-lg-0">
-            <li className="nav-item">
-              <Link className="nav-link" to="/">
-                Home
-              </Link>
-            </li>
-            <li className="nav-item dropdown">
-              <a
-                className="nav-link dropdown-toggle"
-                href="#"
-                role="button"
-                data-bs-toggle="dropdown"
-                aria-expanded="false"
+    <Box sx={{ flexGrow: 1 }}>
+      <AppBar position="static" color="default" sx={{ bgcolor: 'white', boxShadow: 1 }}>
+        <Container maxWidth="lg">
+          <Toolbar sx={{ justifyContent: 'space-between', py: 1 }}>
+            {/* Logo */}
+            <Box 
+              component={Link} 
+              to="/"
+              sx={{ 
+                display: 'flex', 
+                alignItems: 'center',
+                textDecoration: 'none',
+                color: 'inherit'
+              }}
+            >
+              <img
+                src="/olx-logo.svg"
+                alt="OLX Logo"
+                style={{ height: 32, marginRight: 16 }}
+              />
+            </Box>
+
+            {/* Search Component */}
+            <Box sx={{ flexGrow: 1, mx: 2 }}>
+              <Search />
+            </Box>
+
+            {/* Right Section */}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              {/* Language Selector */}
+              <Button
+                color="inherit"
+                sx={{ 
+                  textTransform: 'none',
+                  display: { xs: 'none', md: 'flex' }
+                }}
               >
-                Categories
-              </a>
-              <ul className="dropdown-menu">
-                {categories.map((category) => (
-                  <li key={category}>
-                    <a
-                      className="dropdown-item"
-                      href="#"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        handleCategoryClick(category);
-                      }}
-                    >
-                      {category}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </li>
-          </ul>
-          <div className="d-flex align-items-center">
-            {user ? (
-              <>
-                <span className="text-light me-3">Welcome, {user.name}</span>
-                <Link to="/sell" className="btn btn-success me-2">
-                  + SELL
-                </Link>
-                <button onClick={handleLogout} className="btn btn-outline-light">
-                  Logout
-                </button>
-              </>
-            ) : (
-              <>
-                <Link to="/login" className="btn btn-outline-light me-2">
+                ENGLISH
+              </Button>
+
+              {/* Favorites */}
+              <IconButton
+                color="inherit"
+                onClick={() => navigate('/favorites')}
+                sx={{ display: { xs: 'none', sm: 'flex' } }}
+              >
+                <FavoriteBorderIcon />
+              </IconButton>
+
+              {/* User Menu */}
+              {isLoggedIn ? (
+                <>
+                  <IconButton
+                    onClick={handleMenu}
+                    color="inherit"
+                    sx={{ p: 0 }}
+                  >
+                    <Avatar sx={{ bgcolor: '#002f34' }}>
+                      {userEmail?.[0]?.toUpperCase() || 'U'}
+                    </Avatar>
+                  </IconButton>
+                  <Menu
+                    anchorEl={anchorEl}
+                    open={Boolean(anchorEl)}
+                    onClose={handleClose}
+                  >
+                    <MenuItem onClick={() => {
+                      handleClose();
+                      navigate('/profile');
+                    }}>
+                      Profile
+                    </MenuItem>
+                    <MenuItem onClick={() => {
+                      handleClose();
+                      navigate('/my-ads');
+                    }}>
+                      My Ads
+                    </MenuItem>
+                    <MenuItem onClick={handleLogout}>Logout</MenuItem>
+                  </Menu>
+                </>
+              ) : (
+                <Button
+                  color="inherit"
+                  onClick={() => navigate('/login')}
+                  sx={{ textTransform: 'none' }}
+                >
                   Login
-                </Link>
-                <Link to="/signup" className="btn btn-light">
-                  Sign Up
-                </Link>
-              </>
-            )}
-          </div>
-        </div>
-      </div>
-    </nav>
+                </Button>
+              )}
+
+              {/* Sell Button */}
+              <Button
+                variant="contained"
+                color="secondary"
+                startIcon={<AddIcon />}
+                onClick={() => navigate('/sell')}
+                sx={{
+                  textTransform: 'none',
+                  fontWeight: 'bold',
+                  px: 3,
+                  '&:hover': {
+                    bgcolor: '#ffce32',
+                  },
+                }}
+              >
+                Sell
+              </Button>
+            </Box>
+          </Toolbar>
+
+          {/* Categories Bar */}
+          <Box
+            sx={{
+              bgcolor: 'white',
+              borderTop: 1,
+              borderColor: 'divider',
+              py: 1,
+              display: { xs: 'none', md: 'block' },
+            }}
+          >
+            <Button
+              color="inherit"
+              onClick={handleCategoryMenu}
+              sx={{ textTransform: 'none' }}
+            >
+              ALL CATEGORIES
+            </Button>
+            <Menu
+              anchorEl={categoryAnchorEl}
+              open={Boolean(categoryAnchorEl)}
+              onClose={handleCategoryClose}
+            >
+              {categories.map((category) => (
+                <MenuItem
+                  key={category}
+                  onClick={() => handleCategorySelect(category)}
+                >
+                  {category}
+                </MenuItem>
+              ))}
+            </Menu>
+            <Box
+              component="nav"
+              sx={{
+                display: 'inline-flex',
+                ml: 2,
+                gap: 2,
+                overflowX: 'auto',
+                whiteSpace: 'nowrap',
+                '&::-webkit-scrollbar': { display: 'none' },
+                scrollbarWidth: 'none',
+              }}
+            >
+              {categories.slice(0, 6).map((category) => (
+                <Button
+                  key={category}
+                  color="inherit"
+                  onClick={() => handleCategorySelect(category)}
+                  sx={{
+                    textTransform: 'none',
+                    whiteSpace: 'nowrap',
+                    minWidth: 'auto',
+                  }}
+                >
+                  {category}
+                </Button>
+              ))}
+            </Box>
+          </Box>
+        </Container>
+      </AppBar>
+    </Box>
   );
 };
 

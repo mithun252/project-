@@ -1,28 +1,26 @@
 const jwt = require('jsonwebtoken');
-const User = require('../models/User');
-
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
 const auth = async (req, res, next) => {
     try {
+        // Get token from header
         const token = req.header('Authorization')?.replace('Bearer ', '');
         
         if (!token) {
-            throw new Error();
+            return res.status(401).json({ error: 'No authentication token, access denied' });
         }
 
-        const decoded = jwt.verify(token, JWT_SECRET);
-        const user = await User.findById(decoded.userId);
-
-        if (!user) {
-            throw new Error();
+        try {
+            // Verify token
+            const decoded = jwt.verify(token, JWT_SECRET);
+            req.user = { id: decoded.userId }; 
+            next();
+        } catch (error) {
+            res.status(401).json({ error: 'Token is invalid or expired' });
         }
-
-        req.token = token;
-        req.user = user;
-        next();
     } catch (error) {
-        res.status(401).json({ error: 'Please authenticate.' });
+        console.error('Auth middleware error:', error);
+        res.status(500).json({ error: 'Server error' });
     }
 };
 
